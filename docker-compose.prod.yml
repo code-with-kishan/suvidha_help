@@ -1,0 +1,48 @@
+version: '3.9'
+
+services:
+  suvidha-db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: suvidha_user
+      POSTGRES_PASSWORD: suvidha_password
+      POSTGRES_DB: suvidha
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  suvidha-backend:
+    build:
+      context: ./server
+    restart: always
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      DATABASE_URL: postgresql://suvidha_user:suvidha_password@suvidha-db:5432/suvidha?schema=public
+      JWT_SECRET: suvidha_jwt_secret_2026_xyz
+      HMAC_SECRET: suvidha_hmac_secret_2026_xyz
+      CORS_ORIGIN: "*"
+      KIOSK_DEVICE_KEYS: kiosk-01:change-me
+      SHOW_DEMO_OTP: "true"
+    depends_on:
+      - suvidha-db
+    volumes:
+      - uploads:/app/uploads
+
+  suvidha-client:
+    build:
+      context: ./client
+      args:
+        VITE_API_URL: ""
+        VITE_KIOSK_ID: kiosk-01
+        VITE_KIOSK_KEY: change-me
+        VITE_APP_VERSION: 1.0.0
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - suvidha-backend
+
+volumes:
+  pgdata:
+  uploads:

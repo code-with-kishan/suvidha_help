@@ -176,7 +176,6 @@ Add these variables in the **Environment Variables** section:
 | **`VITE_KIOSK_ID`** | `kiosk-01` |
 | **`VITE_KIOSK_KEY`** | `change-me` |
 | **`VITE_APP_VERSION`** | `1.0.0` |
-
 ### 4.5 — Deploy
 1. Click **Deploy**.
 2. Wait 1–2 minutes for the build to finish.

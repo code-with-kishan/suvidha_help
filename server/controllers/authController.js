@@ -49,7 +49,7 @@ export const sendOtp = async (req, res) => {
       email: true
     },
     smsProvider: 'disabled',
-    ...(process.env.NODE_ENV !== 'production' ? { devOtp: otp } : {})
+    ...((process.env.NODE_ENV !== 'production' || process.env.SHOW_DEMO_OTP === 'true') ? { devOtp: otp } : {})
   });
 };
 
@@ -178,7 +178,7 @@ export const adminLoginInit = async (req, res) => {
     message: 'OTP sent for admin login verification',
     mfaToken,
     channels: { sms: true, email: Boolean(admin.email) },
-    ...(process.env.NODE_ENV !== 'production' ? { devOtp: otp } : {})
+    ...((process.env.NODE_ENV !== 'production' || process.env.SHOW_DEMO_OTP === 'true') ? { devOtp: otp } : {})
   });
 };
 
