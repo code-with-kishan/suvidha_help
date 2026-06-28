@@ -5,8 +5,7 @@ services:
     plan: free
     rootDir: server
     buildCommand: npm install && npx prisma generate
-    preDeployCommand: npx prisma migrate deploy && npm run seed:admin
-    startCommand: npm start
+    startCommand: npx prisma migrate deploy && npm run seed:admin && npm start
     envVars:
       - key: DATABASE_URL
         fromDatabase:

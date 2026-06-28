@@ -47,14 +47,14 @@ We have configured a `render.yaml` Blueprint file at the root. This will automat
 6. Click **Apply** to start the deployment.
 
 ### Option B: Manual Web Service Deployment
-If you prefer manual setup:
+If you prefer manual setup (or if using the Free Tier where pre-deploy commands are restricted):
 - **Service Type:** Web Service
 - **Root Directory:** `server`
 - **Language:** `Node`
 - **Build Command:** `npm install && npx prisma generate`
-- **Start Command:** `npm start`
-- **Pre-Deploy Command:** `npx prisma migrate deploy`
+- **Start Command:** `npx prisma migrate deploy && npm run seed:admin && npm start`
 - **Environment Variables:** Provide all variables listed in the required environment variables section below, and link a PostgreSQL database.
+
 
 ### Required Environment Variables
 If setting up manually or using the blueprint, ensure these are configured:
