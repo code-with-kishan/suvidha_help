@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: suvidha-backend
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install && npx prisma generate
+    preDeployCommand: npx prisma migrate deploy && npm run seed:admin
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: suvidha-db
+          property: connectionString
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: HMAC_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false
+        description: "Comma-separated list of allowed origins (e.g. your Vercel frontend URL)"
+      - key: APP_BASE_URL
+        sync: false
+        description: "The public URL of this Render web service (used for generating absolute upload URLs)"
+      - key: KIOSK_DEVICE_KEYS
+        value: "kiosk-01:change-me"
+        description: "Format: kiosk-01:key1,kiosk-02:key2"
+
+databases:
+  - name: suvidha-db
+    databaseName: suvidha
+    user: suvidha_user
+    plan: free

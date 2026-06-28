@@ -1,0 +1,10 @@
+# Vercel Ignore File
+# Ignore backend/microservices/k8s/venv to keep the build upload small and fast
+
+server
+microservices
+k8s
+.venv
+node_modules
+.git
+.github
