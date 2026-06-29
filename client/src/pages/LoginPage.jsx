@@ -308,7 +308,8 @@ export default function LoginPage() {
       });
       setOtpSent(true);
       setTrialOtp(data.devOtp ? String(data.devOtp) : '');
-      const delivery = data.channels?.email ? 'OTP sent to your email address.' : 'OTP sent successfully.';
+      const devHint = data.devOtp ? ` Your demo OTP is ${data.devOtp}` : '';
+      const delivery = (data.channels?.email ? 'OTP sent to your email address.' : 'OTP sent successfully.') + devHint;
       setMessage(delivery);
     } catch (error) {
       setTrialOtp('');

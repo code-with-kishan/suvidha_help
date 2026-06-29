@@ -29,7 +29,7 @@ export default function AdminLoginPage() {
     try {
       const { data } = await api.post('/api/admin/login', { mobile, password });
       setMfaToken(data.mfaToken);
-      const devHint = data.devOtp ? ` Dev OTP: ${data.devOtp}` : '';
+      const devHint = data.devOtp ? ` Your demo OTP is ${data.devOtp}` : '';
       setMessage(`OTP sent for admin verification.${devHint}`);
     } catch (error) {
       setMessage(error.response?.data?.message || 'Admin login failed');
