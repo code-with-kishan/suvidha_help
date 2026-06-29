@@ -22,9 +22,7 @@ export default function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { audioVolume } = useSelector((state) => state.ui);
-  const [form, setForm] = useState({ mobile: '', otp: '', name: '', email: '', aadhaar: '' });
-  const [otpSent, setOtpSent] = useState(false);
-  const [trialOtp, setTrialOtp] = useState('');
+  const [form, setForm] = useState({ mobile: '', name: '', email: '' });
   const [message, setMessage] = useState('');
   const [activeField, setActiveField] = useState('');
   const [voiceStep, setVoiceStep] = useState('idle');
@@ -50,11 +48,6 @@ export default function LoginPage() {
             ? 'माफ़ कीजिए, ईमेल साफ़ नहीं सुना। कृपया ईमेल एड्रेस फिर से बोलिए।'
             : 'कृपया अपना ईमेल एड्रेस बोलिए।';
         }
-        if (field === 'aadhaar') {
-          return retry
-            ? 'माफ़ कीजिए, आधार नंबर साफ़ नहीं सुना। कृपया आधार नंबर फिर से बोलिए।'
-            : 'कृपया अपना आधार नंबर बोलिए।';
-        }
       }
 
       if (field === 'name') {
@@ -71,11 +64,6 @@ export default function LoginPage() {
         return retry
           ? 'Sorry, I did not catch your email. Please say your email address again.'
           : 'Please say your email address now.';
-      }
-      if (field === 'aadhaar') {
-        return retry
-          ? 'Sorry, I did not catch your Aadhaar number. Please say it again.'
-          : 'Please say your Aadhaar number now.';
       }
       return 'Please say the value now.';
     },
@@ -125,10 +113,10 @@ export default function LoginPage() {
       if (directDigits.length) return directDigits;
 
       const normalized = unicodeDigitNormalized
-        .toLowerCase()
-        .replace(/[-,]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+          .toLowerCase()
+          .replace(/[-,]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
 
       const tokens = normalized.split(' ');
       let built = '';
@@ -140,7 +128,6 @@ export default function LoginPage() {
 
     if (field === 'mobile') return spokenNumberToDigits(value).slice(0, 10);
     if (field === 'otp') return spokenNumberToDigits(value).slice(0, 6);
-    if (field === 'aadhaar') return spokenNumberToDigits(value).slice(0, 12);
     if (field === 'email') {
       return value
         .toLowerCase()
@@ -155,7 +142,6 @@ export default function LoginPage() {
   const isValidVoiceFieldValue = useCallback((field, value) => {
     const text = String(value || '');
     if (field === 'mobile') return /^\d{10}$/.test(text);
-    if (field === 'aadhaar') return /^\d{12}$/.test(text);
     if (field === 'email') return text.includes('@') && text.includes('.');
     if (field === 'name') return text.trim().length >= 2;
     return Boolean(text.trim());
@@ -213,8 +199,8 @@ export default function LoginPage() {
     if (Number(audioVolume) <= 0) dispatch(setAudioVolume(0.75));
 
     const runFlow = async () => {
-      const steps = ['name', 'mobile', 'email', 'aadhaar'];
-      const nextStep = { name: 'mobile', mobile: 'email', email: 'aadhaar', aadhaar: 'done' };
+      const steps = ['name', 'mobile', 'email'];
+      const nextStep = { name: 'mobile', mobile: 'email', email: 'done' };
 
       setIsVoiceFlowRunning(true);
       abortFlowRef.current = false;
@@ -243,8 +229,6 @@ export default function LoginPage() {
             if (!sanitized || !isValidVoiceFieldValue(step, sanitized)) {
               if (step === 'mobile') {
                 setMessage('Mobile number must be exactly 10 digits. Please say your mobile number again.');
-              } else if (step === 'aadhaar') {
-                setMessage('Aadhaar number must be exactly 12 digits. Please say your Aadhaar number again.');
               } else {
                 setMessage(`Could not capture ${step}. Please respond again.`);
               }
@@ -255,8 +239,8 @@ export default function LoginPage() {
             setActiveField('');
             setVoiceStep(nextStep[step]);
             setMessage(
-              step === 'aadhaar'
-                ? 'Voice onboarding complete. Please review details and send OTP.'
+              step === 'email'
+                ? 'Voice onboarding complete. Please review details and click Login.'
                 : `${step} captured. Next: ${nextStep[step]}.`
             );
             done = true;
@@ -296,38 +280,21 @@ export default function LoginPage() {
     };
   }, []);
 
-  const handleSendOtp = async () => {
-    if (!form.mobile || !form.name || !form.email || !form.aadhaar) {
-      setMessage('Mobile, Name, Email, and Aadhaar are required.');
+  const handleLogin = async () => {
+    if (!form.mobile || !form.name || !form.email) {
+      setMessage('Mobile, Name, and Email are required.');
       return;
     }
     try {
-      const { data } = await api.post('/api/auth/send-otp', {
+      const { data } = await api.post('/api/auth/verify-otp', {
         mobile: form.mobile,
+        name: form.name,
         email: form.email
       });
-      setOtpSent(true);
-      setTrialOtp(data.devOtp ? String(data.devOtp) : '');
-      const devHint = data.devOtp ? ` Your demo OTP is ${data.devOtp}` : '';
-      const delivery = (data.channels?.email ? 'OTP sent to your email address.' : 'OTP sent successfully.') + devHint;
-      setMessage(delivery);
-    } catch (error) {
-      setTrialOtp('');
-      setMessage(error.response?.data?.message || 'Failed to send OTP');
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!form.mobile || !form.otp || !form.name || !form.email || !form.aadhaar) {
-      setMessage('Please fill all required details and OTP.');
-      return;
-    }
-    try {
-      const { data } = await api.post('/api/auth/verify-otp', form);
       dispatch(setAuth(data));
       navigate('/dashboard');
     } catch (error) {
-      setMessage(error.response?.data?.message || 'OTP verification failed');
+      setMessage(error.response?.data?.message || 'Login failed');
     }
   };
 
@@ -337,18 +304,17 @@ export default function LoginPage() {
   };
 
   return (
-    <Layout title="Community Hero Login & OTP Authentication">
+    <Layout title="Community Hero Login">
       <div className="grid gap-5 md:grid-cols-2">
         <section className="hero-strip p-6">
           <p className="ui-hand-label mb-3 inline-block">citizen onboarding</p>
           <h2 className="text-3xl font-bold">Secure Community Access</h2>
           <p className="mt-3 text-sm text-slate-100">
-            Join the hyperlocal issue workflow with OTP-based verification, accessible guidance, and transparent follow-up.
+            Join the hyperlocal issue workflow with accessible guidance and transparent follow-up.
           </p>
           <div className="mt-6 space-y-3 text-sm">
-            <div className="ui-soft-card bg-white/20 p-3">1. Enter mobile, full name, email, and Aadhaar</div>
-            <div className="ui-soft-card bg-white/20 p-3">2. Receive 6-digit OTP on your email (valid for 2 minutes)</div>
-            <div className="ui-soft-card bg-white/20 p-3">3. Verify OTP and access your dashboard</div>
+            <div className="ui-soft-card bg-white/20 p-3">1. Enter mobile, full name, and email</div>
+            <div className="ui-soft-card bg-white/20 p-3">2. Click Login to access your dashboard</div>
           </div>
         </section>
 
@@ -420,53 +386,9 @@ export default function LoginPage() {
                 onClose={() => setActiveField('')}
               />
             )}
-            <input
-              className="w-full rounded-lg border p-3 text-lg"
-              placeholder="Aadhaar Number"
-              type="text"
-              inputMode="numeric"
-              value={form.aadhaar}
-              onChange={(e) => setForm({ ...form, aadhaar: e.target.value })}
-              onFocus={() => setActiveField('aadhaar')}
-            />
-            {activeField === 'aadhaar' && (
-              <OnScreenKeypad
-                value={form.aadhaar}
-                onChange={(value) => setForm({ ...form, aadhaar: value })}
-                onClose={() => setActiveField('')}
-              />
-            )}
 
-            {!otpSent ? (
-              <KioskButton onClick={handleSendOtp}>Send OTP</KioskButton>
-            ) : (
-              <>
-                <input
-                  className="w-full rounded-lg border p-3 text-lg"
-                  placeholder="Enter 6 digit OTP"
-                  type="text"
-                  inputMode="numeric"
-                  value={form.otp}
-                  onChange={(e) => setForm({ ...form, otp: e.target.value })}
-                  onFocus={() => setActiveField('otp')}
-                />
-                {activeField === 'otp' && (
-                  <OnScreenKeypad
-                    value={form.otp}
-                    onChange={(value) => setForm({ ...form, otp: value })}
-                    onClose={() => setActiveField('')}
-                  />
-                )}
-                <KioskButton className="kiosk-secondary-btn" onClick={handleVerifyOtp}>
-                  Verify OTP
-                </KioskButton>
-                {trialOtp && (
-                  <div className="ui-result-card p-3 text-sm">
-                    Trial OTP (for testing): <span className="font-bold tracking-widest">{trialOtp}</span>
-                  </div>
-                )}
-              </>
-            )}
+            <KioskButton onClick={handleLogin}>Login</KioskButton>
+
             {message && <p className="ui-note p-3 text-sm">{message}</p>}
             <button
               className="touch-btn ui-chip-button w-full justify-center px-4 py-3 text-sm"

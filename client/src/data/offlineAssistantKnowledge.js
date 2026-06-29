@@ -9,9 +9,7 @@ const routeGuides = {
     'Step 1: Enter Full Name.',
     'Step 2: Enter 10-digit Mobile Number.',
     'Step 3: Enter Email Address.',
-    'Step 4: Enter 12-digit Aadhaar Number.',
-    'Step 5: Click Send OTP.',
-    'Step 6: Enter OTP and click Verify OTP.'
+    'Step 4: Click Login.'
   ],
   '/services': [
     'Step 1: Select the local issue type.',
@@ -60,7 +58,7 @@ const generalAnswers = [
   },
   {
     test: (q) => /(where|kahan|कहाँ).*login|login.*where/.test(q),
-    answer: 'Open Community Login from the side navigation. Then follow steps: Name → Mobile → Email → Aadhaar → Send OTP → Verify OTP.'
+    answer: 'Open Community Login from the side navigation. Then follow steps: Name → Mobile → Email → Click Login.'
   },
   {
     test: (q) => /(keyboard|keypad|typing|type|toggle keyboard|कीबोर्ड)/.test(q),
@@ -83,7 +81,7 @@ const pageHint = (path) => {
 };
 
 const guideByQuery = (q, path) => {
-  if (/(login|otp|aadhaar|mobile|email)/.test(q)) return routeGuides['/login'];
+  if (/(login|mobile|email)/.test(q)) return routeGuides['/login'];
   if (/(service|request|report issue|new issue)/.test(q)) return routeGuides['/services'];
   if (/(complaint|issue|problem)/.test(q)) return routeGuides['/complaints'];
   if (/(payment|bill|receipt)/.test(q)) return routeGuides['/payment'];

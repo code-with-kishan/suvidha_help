@@ -15,12 +15,10 @@ export default function AdminLoginPage() {
   const navigate = useNavigate();
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
-  const [mfaToken, setMfaToken] = useState('');
   const [message, setMessage] = useState('');
   const [activeField, setActiveField] = useState('');
 
-  const startMfa = async () => {
+  const handleLogin = async () => {
     if (!mobile || !password) {
       setMessage('Admin mobile and password are required.');
       return;
@@ -28,26 +26,10 @@ export default function AdminLoginPage() {
 
     try {
       const { data } = await api.post('/api/admin/login', { mobile, password });
-      setMfaToken(data.mfaToken);
-      const devHint = data.devOtp ? ` Your demo OTP is ${data.devOtp}` : '';
-      setMessage(`OTP sent for admin verification.${devHint}`);
-    } catch (error) {
-      setMessage(error.response?.data?.message || 'Admin login failed');
-    }
-  };
-
-  const verifyMfa = async () => {
-    if (!otp) {
-      setMessage('Admin OTP is required.');
-      return;
-    }
-
-    try {
-      const { data } = await api.post('/api/admin/login/verify', { mfaToken, otp });
       dispatch(setAuth(data));
       navigate('/admin/dashboard');
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Admin OTP verification failed');
+      setMessage(error.response?.data?.message || 'Admin login failed');
     }
   };
 
@@ -91,25 +73,7 @@ export default function AdminLoginPage() {
               onClose={() => setActiveField('')}
             />
           )}
-          {!mfaToken ? (
-            <KioskButton onClick={startMfa}>Send Admin OTP</KioskButton>
-          ) : (
-            <>
-              <input
-                className="w-full rounded-lg border p-3 text-lg"
-                placeholder="Enter admin OTP"
-                inputMode="numeric"
-                aria-label="Admin OTP"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                onFocus={() => setActiveField('otp')}
-              />
-              {activeField === 'otp' && (
-                <OnScreenKeypad value={otp} onChange={setOtp} onClose={() => setActiveField('')} />
-              )}
-              <KioskButton onClick={verifyMfa}>Verify OTP & Login</KioskButton>
-            </>
-          )}
+          <KioskButton onClick={handleLogin}>Login</KioskButton>
           {message && <p className="ui-note p-3 text-sm">{message}</p>}
         </div>
       </div>

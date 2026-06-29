@@ -54,35 +54,17 @@ export const sendOtp = async (req, res) => {
 };
 
 export const verifyOtp = async (req, res) => {
-  const { mobile, otp, name, email, aadhaar } = req.body;
+  const { mobile, name, email } = req.body;
 
-  if (!mobile || !otp) {
-    return res.status(400).json({ message: 'Mobile and OTP are required' });
+  if (!mobile) {
+    return res.status(400).json({ message: 'Mobile number is required' });
   }
-  if (!name || !email || !aadhaar) {
-    return res.status(400).json({ message: 'Name, Email, and Aadhaar are required' });
+  if (!name || !email) {
+    return res.status(400).json({ message: 'Name and Email are required' });
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ message: 'Invalid email format' });
   }
-
-  const record = await prisma.oTPVerification.findFirst({
-    where: { mobile, otp, verified: false },
-    orderBy: { createdAt: 'desc' }
-  });
-
-  if (!record) {
-    return res.status(400).json({ message: 'Invalid OTP' });
-  }
-
-  if (new Date() > record.expiresAt) {
-    return res.status(400).json({ message: 'OTP expired' });
-  }
-
-  await prisma.oTPVerification.update({
-    where: { id: record.id },
-    data: { verified: true }
-  });
 
   let user = await prisma.user.findUnique({ where: { mobile } });
   if (!user) {
@@ -91,7 +73,6 @@ export const verifyOtp = async (req, res) => {
         mobile,
         name: name || 'Citizen',
         email,
-        aadhaar,
         role: 'CITIZEN'
       }
     });
@@ -100,8 +81,7 @@ export const verifyOtp = async (req, res) => {
       where: { id: user.id },
       data: {
         name: name || user.name,
-        email,
-        aadhaar
+        email
       }
     });
   }
@@ -142,102 +122,19 @@ export const adminLoginInit = async (req, res) => {
     return res.status(401).json({ message: 'Invalid admin credentials' });
   }
 
-  const otp = generateOtp();
-  const expiresAt = getOtpExpiry();
-
-  await prisma.oTPVerification.create({
-    data: { mobile: admin.mobile, otp, expiresAt }
-  });
-
-  await sendSms(admin.mobile, `Your SUVIDHA admin login OTP is ${otp}. It is valid for 2 minutes.`);
-  if (admin.email) {
-    await sendEmail({
-      to: admin.email,
-      subject: 'SUVIDHA Admin Login OTP',
-      html: `<p>Your SUVIDHA admin OTP is <b>${otp}</b>. It is valid for 2 minutes.</p>`
-    });
-  }
-
-  const mfaToken = signJwtWithOptions(
-    {
-      id: admin.id,
-      mobile: admin.mobile,
-      role: admin.role,
-      purpose: ADMIN_MFA_PURPOSE
-    },
-    { expiresIn: '5m' }
-  );
-
-  await createAuditLog({
-    userId: admin.id,
-    action: 'ADMIN_MFA_INIT',
-    metadata: { mobile: admin.mobile, channels: { sms: true, email: Boolean(admin.email) } }
-  });
-
-  res.status(200).json({
-    message: 'OTP sent for admin login verification',
-    mfaToken,
-    channels: { sms: true, email: Boolean(admin.email) },
-    ...((process.env.NODE_ENV !== 'production' || process.env.SHOW_DEMO_OTP === 'true') ? { devOtp: otp } : {})
-  });
-};
-
-export const adminLoginVerify = async (req, res) => {
-  const { mfaToken, otp } = req.body;
-
-  if (!mfaToken || !otp) {
-    return res.status(400).json({ message: 'mfaToken and otp are required' });
-  }
-
-  let challenge;
-  try {
-    challenge = verifyJwt(mfaToken);
-  } catch (_error) {
-    return res.status(401).json({ message: 'Invalid or expired MFA challenge' });
-  }
-
-  if (challenge.purpose !== ADMIN_MFA_PURPOSE) {
-    return res.status(401).json({ message: 'Invalid MFA challenge purpose' });
-  }
-
-  const record = await prisma.oTPVerification.findFirst({
-    where: {
-      mobile: challenge.mobile,
-      otp,
-      verified: false
-    },
-    orderBy: { createdAt: 'desc' }
-  });
-
-  if (!record) {
-    return res.status(400).json({ message: 'Invalid OTP' });
-  }
-
-  if (new Date() > record.expiresAt) {
-    return res.status(400).json({ message: 'OTP expired' });
-  }
-
-  await prisma.oTPVerification.update({
-    where: { id: record.id },
-    data: { verified: true }
-  });
-
-  const admin = await prisma.user.findUnique({ where: { mobile: challenge.mobile } });
-  if (!admin || !['ADMIN', 'SUPER_ADMIN'].includes(admin.role)) {
-    return res.status(401).json({ message: 'Invalid admin account' });
-  }
-
   const token = signJwt({ id: admin.id, mobile: admin.mobile, role: admin.role });
 
   await createAuditLog({
     userId: admin.id,
     action: 'ADMIN_LOGIN_SUCCESS',
-    metadata: { mobile: admin.mobile, mfa: true }
+    metadata: { mobile: admin.mobile, mfa: false }
   });
 
   res.status(200).json({ token, user: admin });
 };
 
-export const adminLogin = async (_req, res) => {
-  res.status(428).json({ message: 'Admin MFA is required. Use /api/admin/login then /api/admin/login/verify.' });
+export const adminLoginVerify = async (req, res) => {
+  res.status(200).json({ message: 'MFA is disabled. Log in directly using /api/admin/login.' });
 };
+
+export const adminLogin = adminLoginInit;

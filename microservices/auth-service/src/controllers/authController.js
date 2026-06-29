@@ -36,31 +36,21 @@ export const sendOtp = async (req, res) => {
 };
 
 export const verifyOtp = async (req, res) => {
-  const { mobile, otp, name, email, aadhaar } = req.body;
+  const { mobile, name, email } = req.body;
 
-  if (!mobile || !otp || !name || !email || !aadhaar) {
-    return res.status(400).json({ message: 'mobile, otp, name, email and aadhaar are required' });
+  if (!mobile || !name || !email) {
+    return res.status(400).json({ message: 'mobile, name and email are required' });
   }
-
-  const record = await prisma.oTPVerification.findFirst({
-    where: { mobile, otp, verified: false },
-    orderBy: { createdAt: 'desc' }
-  });
-
-  if (!record) return res.status(400).json({ message: 'Invalid OTP' });
-  if (new Date() > record.expiresAt) return res.status(400).json({ message: 'OTP expired' });
-
-  await prisma.oTPVerification.update({ where: { id: record.id }, data: { verified: true } });
 
   let user = await prisma.user.findUnique({ where: { mobile } });
   if (!user) {
     user = await prisma.user.create({
-      data: { mobile, name, email, aadhaar, role: 'CITIZEN' }
+      data: { mobile, name, email, role: 'CITIZEN' }
     });
   } else {
     user = await prisma.user.update({
       where: { id: user.id },
-      data: { name, email, aadhaar }
+      data: { name, email }
     });
   }
 
