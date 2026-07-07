@@ -1059,20 +1059,14 @@ export default function Layout({ children, title }) {
           </div>
           <div className="break-all text-left md:text-right">
             <p>
-              Contact Email:{' '}
-              <a className="font-semibold underline decoration-2 underline-offset-4" href="mailto:knishad0004@gmail.com">
-                knishad0004@gmail.com
-              </a>
-            </p>
-            <p>
               LinkedIn:{' '}
               <a
                 className="font-semibold underline decoration-2 underline-offset-4"
-                href="https://www.linkedin.com/in/kishan-nishad-161a73392"
+                href="https://www.linkedin.com/in/amit"
                 target="_blank"
                 rel="noreferrer"
               >
-                www.linkedin.com/in/kishan-nishad-161a73392
+                www.linkedin.com/in/amit
               </a>
             </p>
           </div>
