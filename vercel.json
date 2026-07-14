@@ -6,13 +6,13 @@
   "framework": "vite",
   "cleanUrls": true,
   "functions": {
-    "api/[...path].js": {
+    "api/**/*.js": {
       "includeFiles": "server/**"
     }
   },
   "rewrites": [
     {
-      "source": "/((?!api/).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]

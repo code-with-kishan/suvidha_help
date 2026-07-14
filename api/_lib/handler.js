@@ -10,7 +10,7 @@ process.env.DEFAULT_ADMIN_PASSWORD ||= 'Admin@123';
 let appPromise;
 
 module.exports = async (req, res) => {
-  appPromise ||= import('../server/app.js').then((module) => module.default);
+  appPromise ||= import('../../server/app.js').then((module) => module.default);
   const app = await appPromise;
   return app(req, res);
 };
