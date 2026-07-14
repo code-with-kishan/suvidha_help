@@ -1,11 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm install --prefix client",
-  "buildCommand": "npm run build --prefix client",
+  "installCommand": "npm install --prefix client && npm install --prefix server",
+  "buildCommand": "cd server && DATABASE_URL=file:./prisma/dev.db npx prisma generate && cd ../client && npm run build",
   "outputDirectory": "client/dist",
   "framework": "vite",
   "cleanUrls": true,
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/[...path].js"
+    },
     {
       "handle": "filesystem"
     },

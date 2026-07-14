@@ -16,6 +16,7 @@ import syncRoutes from './routes/syncRoutes.js';
 import { apiRateLimiter } from './middleware/rateLimit.js';
 import { kioskDeviceAuth } from './middleware/deviceAuth.js';
 import { postKioskHeartbeat } from './controllers/syncController.js';
+import { ensureDatabaseReady } from './utils/prisma.js';
 
 const app = express();
 
@@ -36,6 +37,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(apiRateLimiter);
 app.use('/uploads', express.static(path.resolve('uploads')));
+app.use(async (_req, _res, next) => {
+  await ensureDatabaseReady();
+  next();
+});
 
 app.get('/api/health', (_req, res) => {
   res.status(200).json({

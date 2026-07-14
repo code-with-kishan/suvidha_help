@@ -285,6 +285,7 @@ export default function LoginPage() {
       setMessage('Mobile, Name, and Email are required.');
       return;
     }
+
     try {
       const { data } = await api.post('/api/auth/verify-otp', {
         mobile: form.mobile,
@@ -294,7 +295,7 @@ export default function LoginPage() {
       dispatch(setAuth(data));
       navigate('/dashboard');
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Login failed');
+      setMessage(error.response?.data?.message || error.message || 'Login failed');
     }
   };
 
