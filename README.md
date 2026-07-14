@@ -1,4 +1,4 @@
-# Community Hero
+# Community Hero Prompt war
 
 <p align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=F4C20D&height=190&section=header&text=Community%20Hero&fontColor=171717&fontSize=48&animation=fadeIn&fontAlignY=38&desc=Hyperlocal%20Problem%20Solver&descAlignY=60&descSize=20" alt="Community Hero header" />
