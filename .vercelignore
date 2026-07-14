@@ -1,7 +1,6 @@
 # Vercel Ignore File
-# Ignore backend/microservices/k8s/venv to keep the build upload small and fast
+# Ignore unused heavy directories to keep the build upload small and fast
 
-server
 microservices
 k8s
 .venv
