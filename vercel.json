@@ -6,7 +6,10 @@
   "framework": "vite",
   "cleanUrls": true,
   "functions": {
-    "api/**/*.js": {
+    "api/**/[...path].js": {
+      "includeFiles": "server/**"
+    },
+    "api/health.js": {
       "includeFiles": "server/**"
     }
   },
