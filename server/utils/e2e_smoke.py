@@ -6,7 +6,7 @@ import uuid
 
 BASE = "http://localhost:5001"
 MOBILE = "88" + str(uuid.uuid4().int)[:8]
-EMAIL = "knishad0004@gmail.com"
+EMAIL = "unbreakableminds012@gmail.com"
 NAME = "Amit"
 AADHAAR = "123412341234"
 
