@@ -10,7 +10,15 @@ process.env.DEFAULT_ADMIN_PASSWORD ||= 'Admin@123';
 let appPromise;
 
 module.exports = async (req, res) => {
-  appPromise ||= import('../../server/app.js').then((module) => module.default);
+  const parsed = new URL(req.url, 'http://localhost');
+  const routedPath = parsed.searchParams.get('path') || '';
+  const remainingParams = new URLSearchParams(parsed.searchParams);
+  remainingParams.delete('path');
+  const query = remainingParams.toString();
+
+  req.url = `/api/${routedPath}${query ? `?${query}` : ''}`;
+
+  appPromise ||= import('../server/app.js').then((module) => module.default);
   const app = await appPromise;
   return app(req, res);
 };

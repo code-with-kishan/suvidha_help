@@ -6,37 +6,17 @@
   "framework": "vite",
   "cleanUrls": true,
   "functions": {
-    "api/health.js": {
-      "includeFiles": "server/**"
-    },
-    "api/admin/[...path].js": {
-      "includeFiles": "server/**"
-    },
-    "api/auth/[...path].js": {
-      "includeFiles": "server/**"
-    },
-    "api/complaints/[...path].js": {
-      "includeFiles": "server/**"
-    },
-    "api/documents/[...path].js": {
-      "includeFiles": "server/**"
-    },
-    "api/health/[...path].js": {
-      "includeFiles": "server/**"
-    },
-    "api/payments/[...path].js": {
-      "includeFiles": "server/**"
-    },
-    "api/services/[...path].js": {
-      "includeFiles": "server/**"
-    },
-    "api/sync/[...path].js": {
+    "api/index.js": {
       "includeFiles": "server/**"
     }
   },
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/api/(.*)",
+      "destination": "/api/index.js?path=$1"
+    },
+    {
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]
