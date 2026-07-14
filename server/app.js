@@ -3,7 +3,6 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import path from 'path';
 import { Prisma } from '@prisma/client';
 
 import authRoutes from './routes/authRoutes.js';
@@ -17,6 +16,7 @@ import { apiRateLimiter } from './middleware/rateLimit.js';
 import { kioskDeviceAuth } from './middleware/deviceAuth.js';
 import { postKioskHeartbeat } from './controllers/syncController.js';
 import { ensureDatabaseReady } from './utils/prisma.js';
+import { getUploadDir } from './services/storageService.js';
 
 const app = express();
 
@@ -36,7 +36,7 @@ app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(apiRateLimiter);
-app.use('/uploads', express.static(path.resolve('uploads')));
+app.use('/uploads', express.static(getUploadDir()));
 app.use(async (_req, _res, next) => {
   await ensureDatabaseReady();
   next();

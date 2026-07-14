@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import PDFDocument from 'pdfkit';
 
-const receiptDir = path.resolve('uploads/receipts');
+const receiptDir = process.env.VERCEL ? '/tmp/uploads/receipts' : path.resolve('uploads/receipts');
 if (!fs.existsSync(receiptDir)) {
   fs.mkdirSync(receiptDir, { recursive: true });
 }

@@ -17,6 +17,12 @@ import { enterGuestMode, setAudioVolume, setAuth } from '../redux/store';
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const quickLoginProfile = {
+  mobile: import.meta.env.VITE_QUICK_LOGIN_MOBILE || '9876543210',
+  name: import.meta.env.VITE_QUICK_LOGIN_NAME || 'Community Citizen',
+  email: import.meta.env.VITE_QUICK_LOGIN_EMAIL || 'citizen@suvidha.local'
+};
+
 export default function LoginPage() {
   useTranslation();
   const dispatch = useDispatch();
@@ -27,6 +33,7 @@ export default function LoginPage() {
   const [activeField, setActiveField] = useState('');
   const [voiceStep, setVoiceStep] = useState('idle');
   const [isVoiceFlowRunning, setIsVoiceFlowRunning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const abortFlowRef = useRef(false);
 
   const currentLanguage = useCallback(() => localStorage.getItem('suvidha_lang') || 'en', []);
@@ -192,8 +199,46 @@ export default function LoginPage() {
     []
   );
 
+  const loginWithForm = useCallback(
+    async (loginForm) => {
+      if (!loginForm.mobile || !loginForm.name || !loginForm.email) {
+        setMessage('Mobile, Name, and Email are required.');
+        return;
+      }
+
+      setIsSubmitting(true);
+      setMessage('Logging in...');
+
+      try {
+        const { data } = await api.post('/api/auth/verify-otp', {
+          mobile: loginForm.mobile,
+          name: loginForm.name,
+          email: loginForm.email
+        });
+        dispatch(setAuth(data));
+        navigate('/dashboard');
+      } catch (error) {
+        setMessage(error.response?.data?.message || error.message || 'Login failed');
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [dispatch, navigate]
+  );
+
+  const handleQuickLogin = useCallback(() => {
+    abortFlowRef.current = true;
+    stopVoiceCommandListener();
+    stopVoiceAssistant();
+    setActiveField('');
+    setVoiceStep('idle');
+    setIsVoiceFlowRunning(false);
+    setForm(quickLoginProfile);
+    loginWithForm(quickLoginProfile);
+  }, [loginWithForm]);
+
   const startVoiceLoginFlow = useCallback(() => {
-    if (isVoiceFlowRunning) return;
+    if (isVoiceFlowRunning || isSubmitting) return;
 
     const lang = currentLanguage();
     if (Number(audioVolume) <= 0) dispatch(setAudioVolume(0.75));
@@ -240,7 +285,7 @@ export default function LoginPage() {
             setVoiceStep(nextStep[step]);
             setMessage(
               step === 'email'
-                ? 'Voice onboarding complete. Please review details and click Login.'
+                ? 'Voice onboarding complete. Click Login to continue, or use Quick Direct Login anytime.'
                 : `${step} captured. Next: ${nextStep[step]}.`
             );
             done = true;
@@ -265,6 +310,7 @@ export default function LoginPage() {
     currentLanguage,
     dispatch,
     getPromptForField,
+    isSubmitting,
     isVoiceFlowRunning,
     listenOnce,
     isValidVoiceFieldValue,
@@ -280,24 +326,7 @@ export default function LoginPage() {
     };
   }, []);
 
-  const handleLogin = async () => {
-    if (!form.mobile || !form.name || !form.email) {
-      setMessage('Mobile, Name, and Email are required.');
-      return;
-    }
-
-    try {
-      const { data } = await api.post('/api/auth/verify-otp', {
-        mobile: form.mobile,
-        name: form.name,
-        email: form.email
-      });
-      dispatch(setAuth(data));
-      navigate('/dashboard');
-    } catch (error) {
-      setMessage(error.response?.data?.message || error.message || 'Login failed');
-    }
-  };
+  const handleLogin = () => loginWithForm(form);
 
   const handleGuestMode = () => {
     dispatch(enterGuestMode());
@@ -314,8 +343,8 @@ export default function LoginPage() {
             Join the hyperlocal issue workflow with accessible guidance and transparent follow-up.
           </p>
           <div className="mt-6 space-y-3 text-sm">
-            <div className="ui-soft-card bg-white/20 p-3">1. Enter mobile, full name, and email</div>
-            <div className="ui-soft-card bg-white/20 p-3">2. Click Login to access your dashboard</div>
+            <div className="ui-soft-card bg-white/20 p-3">1. Tap Quick Direct Login</div>
+            <div className="ui-soft-card bg-white/20 p-3">2. Details fill automatically and dashboard opens</div>
           </div>
         </section>
 
@@ -323,10 +352,13 @@ export default function LoginPage() {
           <p className="ui-hand-label mb-3 inline-block">step by step</p>
           <h3 className="mb-4 text-2xl font-semibold text-primary">Community Login</h3>
           <div className="space-y-3">
+            <KioskButton onClick={handleQuickLogin} disabled={isSubmitting}>
+              {isSubmitting ? 'Logging in...' : 'Quick Direct Login'}
+            </KioskButton>
             <button
               className="touch-btn kiosk-primary-btn kiosk-secondary-btn text-sm"
               onClick={startVoiceLoginFlow}
-              disabled={isVoiceFlowRunning}
+              disabled={isVoiceFlowRunning || isSubmitting}
             >
               {isVoiceFlowRunning ? 'Voice Fill Running...' : 'Start Voice Fill'}
             </button>
@@ -388,7 +420,9 @@ export default function LoginPage() {
               />
             )}
 
-            <KioskButton onClick={handleLogin}>Login</KioskButton>
+            <KioskButton onClick={handleLogin} disabled={isSubmitting}>
+              {isSubmitting ? 'Logging in...' : 'Login'}
+            </KioskButton>
 
             {message && <p className="ui-note p-3 text-sm">{message}</p>}
             <button

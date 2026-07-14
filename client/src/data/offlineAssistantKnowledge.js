@@ -6,10 +6,9 @@ const normalize = (text) =>
 
 const routeGuides = {
   '/login': [
-    'Step 1: Enter Full Name.',
-    'Step 2: Enter 10-digit Mobile Number.',
-    'Step 3: Enter Email Address.',
-    'Step 4: Click Login.'
+    'Step 1: Open Community Login.',
+    'Step 2: Tap Quick Direct Login.',
+    'Step 3: The form fills automatically and opens the dashboard.'
   ],
   '/services': [
     'Step 1: Select the local issue type.',
@@ -58,7 +57,7 @@ const generalAnswers = [
   },
   {
     test: (q) => /(where|kahan|कहाँ).*login|login.*where/.test(q),
-    answer: 'Open Community Login from the side navigation. Then follow steps: Name → Mobile → Email → Click Login.'
+    answer: 'Open Community Login from the side navigation. Tap Quick Direct Login to auto-fill details and open the dashboard.'
   },
   {
     test: (q) => /(keyboard|keypad|typing|type|toggle keyboard|कीबोर्ड)/.test(q),
@@ -114,6 +113,6 @@ export const offlineAssistantQuickPrompts = [
   'How to report an issue?',
   'How to escalate a local problem?',
   'How to make a support payment?',
-  'How to complete login with OTP?',
+  'How to direct login?',
   'Hi'
 ];
